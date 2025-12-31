@@ -1,0 +1,7 @@
+{
+  "name": "WalkGIS",
+  "description": "An interactive geospatial viewer and toolset for walking maps, powered by sql.js and React Leaflet.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
