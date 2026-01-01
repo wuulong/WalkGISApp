@@ -5,6 +5,7 @@ import { WalkingMap } from '../types';
 import { Map as MapIcon, ChevronRight, Compass, Info, MapPinned, BookOpen, MessageSquare, ExternalLink, LifeBuoy } from 'lucide-react';
 import { resolveMapImagePath } from '../services/contentService';
 import NearbyDiscovery from '../components/NearbyDiscovery';
+import { useDataSource } from '../contexts/DataSourceContext';
 
 interface HomeProps {
   onSelectMap: (mapId: string) => void;
@@ -12,22 +13,23 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
+  const { baseUrl } = useDataSource();
   const [maps, setMaps] = useState<WalkingMap[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    queryMaps().then(data => {
+    queryMaps(baseUrl).then(data => {
       setMaps(data);
       setLoading(false);
     });
-  }, []);
+  }, [baseUrl]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-pulse flex flex-col items-center gap-4 text-slate-400">
           <Compass className="w-12 h-12 animate-spin text-blue-500" />
-          <p className="font-bold tracking-widest uppercase text-xs">Scanning Local Archives</p>
+          <p className="font-bold tracking-widest uppercase text-xs">Scanning Node Context</p>
         </div>
       </div>
     );
@@ -39,65 +41,42 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
       <div className="text-center max-w-4xl mx-auto space-y-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100/50 mb-2">
           <MapPinned className="w-3 h-3" />
-          Spatial Collection
+          Current Archive Node
         </div>
         <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-none sm:text-7xl">
           Curated Walking Maps
         </h1>
         <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-          Navigate through historical trails and community-mapped points of interest using our offline-first GIS engine.
+          Navigate through historical trails and community-mapped points of interest from the currently connected WalkGIS node.
         </p>
 
         {/* Community Links */}
         <div className="flex flex-wrap justify-center gap-4 mt-8">
-          <a 
-            href="https://wuulong.github.io/wuulong-notes-blog/posts/20251230_walkgis_app_architecture/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all group active:scale-95"
-          >
+          <a href="https://wuulong.github.io/wuulong-notes-blog/posts/20251230_walkgis_app_architecture/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all group active:scale-95">
             <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
               <LifeBuoy className="w-5 h-5 text-blue-600" />
             </div>
             <div className="text-left">
               <p className="text-xs font-black uppercase tracking-widest text-slate-400">User Guide</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">
-                使用說明書 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </p>
+              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">使用說明書</p>
             </div>
           </a>
-
-          <a 
-            href="https://bit.ly/491x0BV" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all group active:scale-95"
-          >
+          <a href="https://bit.ly/491x0BV" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all group active:scale-95">
             <div className="p-2 bg-amber-50 rounded-xl group-hover:bg-amber-100 transition-colors">
               <BookOpen className="w-5 h-5 text-amber-600" />
             </div>
             <div className="text-left">
               <p className="text-xs font-black uppercase tracking-widest text-slate-400">Community Blog</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">
-                哈爸筆記 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </p>
+              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">哈爸筆記</p>
             </div>
           </a>
-
-          <a 
-            href="https://discord.gg/bywmcqCAEs" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group active:scale-95"
-          >
+          <a href="https://discord.gg/bywmcqCAEs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group active:scale-95">
             <div className="p-2 bg-indigo-50 rounded-xl group-hover:bg-indigo-100 transition-colors">
               <MessageSquare className="w-5 h-5 text-indigo-600" />
             </div>
             <div className="text-left">
               <p className="text-xs font-black uppercase tracking-widest text-slate-400">Join Discussion</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">
-                哈爸實驗室 Discord <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </p>
+              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">哈爸實驗室 Discord</p>
             </div>
           </a>
         </div>
@@ -117,8 +96,7 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {maps.map((map) => {
-            const coverUrl = resolveMapImagePath(map.cover_image) || `https://picsum.photos/seed/${map.map_id}/800/500`;
-            
+            const coverUrl = resolveMapImagePath(baseUrl, map.cover_image) || `https://picsum.photos/seed/${map.map_id}/800/500`;
             return (
               <div 
                 key={map.map_id}
@@ -126,52 +104,17 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
                 onClick={() => onSelectMap(map.map_id)}
               >
                 <div className="aspect-[16/11] overflow-hidden relative">
-                  <img 
-                    src={coverUrl} 
-                    alt={map.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  />
+                  <img src={coverUrl} alt={map.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center justify-between shadow-lg">
-                      <span>Launch Explorer</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </div>
-                  </div>
                 </div>
                 <div className="p-8 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start gap-4 mb-3">
-                    <h3 className="text-2xl font-black text-slate-900 leading-tight">
-                      {map.name}
-                    </h3>
-                  </div>
-                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-2">
-                    {map.description || 'Detailed mapping and points of interest for this region.'}
-                  </p>
-                  <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    <span className="flex items-center gap-2 group-hover:text-blue-600 transition-colors">
-                      <MapIcon className="w-3.5 h-3.5" />
-                      Interactive Guide
-                    </span>
-                    <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-200 transition-colors"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors delay-75"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-600 transition-colors delay-150"></div>
-                    </div>
-                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 leading-tight mb-3">{map.name}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-2">{map.description || 'Detailed mapping and points of interest for this region.'}</p>
                 </div>
               </div>
             );
           })}
         </div>
-
-        {maps.length === 0 && (
-          <div className="col-span-full py-24 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-            <Info className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900">No archives found</h3>
-            <p className="text-slate-500 mt-2">The walking trail database is currently empty.</p>
-          </div>
-        )}
       </div>
     </div>
   );

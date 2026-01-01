@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Map as MapIcon, Home, Compass, Loader2, X } from 'lucide-react';
+import { Search, Map as MapIcon, Home, Compass, Loader2, X, Database } from 'lucide-react';
 import { searchFeatures } from '../services/dbService';
+import { useDataSource } from '../contexts/DataSourceContext';
+import SourceSwitcher from './SourceSwitcher';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,16 +12,18 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) => {
+  const { baseUrl } = useDataSource();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (searchTerm.trim().length >= 2) {
         setIsSearching(true);
-        const res = await searchFeatures(searchTerm);
+        const res = await searchFeatures(baseUrl, searchTerm);
         setResults(res);
         setIsSearching(false);
         setShowResults(true);
@@ -30,7 +34,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) =
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, baseUrl]);
 
   const handleSelect = (id: string) => {
     onSearchSelect(id);
@@ -99,7 +103,15 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) =
               )}
             </div>
 
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-2 sm:gap-4">
+              <button 
+                onClick={() => setShowSwitcher(true)}
+                className="p-2 text-slate-600 hover:text-blue-600 transition-all rounded-xl hover:bg-blue-50 active:scale-95 group relative"
+                title="Node Settings"
+              >
+                <Database className="w-6 h-6" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+              </button>
               <button 
                 onClick={onGoHome}
                 className="p-2 text-slate-600 hover:text-blue-600 transition-all rounded-xl hover:bg-blue-50 active:scale-95"
@@ -116,9 +128,13 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) =
         {children}
       </main>
 
+      {showSwitcher && (
+        <SourceSwitcher onClose={() => setShowSwitcher(false)} />
+      )}
+
       <footer className="bg-white border-t border-slate-200 py-8 text-center text-slate-500 text-sm">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>&copy; {new Date().getFullYear()} WalkGIS Open Project. Powered by GitHub Pages & sql.js.</p>
+          <p>&copy; {new Date().getFullYear()} WalkGIS Protocol. Powered by GitHub Pages & sql.js.</p>
           <div className="flex gap-6">
             <a href="https://bit.ly/491x0BV" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">哈爸筆記 Blog</a>
             <a href="https://discord.gg/bywmcqCAEs" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">哈爸實驗室 Discord</a>

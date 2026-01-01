@@ -1,33 +1,16 @@
 
-/**
- * 智慧偵測當前環境的 Base URL
- */
-const getRepoBaseUrl = () => {
-  const { origin, pathname, hostname } = window.location;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return origin.endsWith('/') ? origin : `${origin}/`;
-  }
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const repoName = pathSegments.length > 0 ? pathSegments[0] : '';
-  return (repoName && !hostname.includes('localhost')) ? `${origin}/${repoName}/` : `${origin}/`;
-};
-
-const getProjectBaseUrl = (): string => {
-  return `${getRepoBaseUrl()}walkgis_prj/`;
-};
-
-export const resolveMapImagePath = (path: string | undefined): string | null => {
+export const resolveMapImagePath = (baseUrl: string, path: string | undefined): string | null => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   
   const filename = path.split(/[/\\]/).filter(Boolean).pop();
   if (!filename) return null;
   
-  return `${getProjectBaseUrl()}assets/images/${filename}`;
+  return `${baseUrl}assets/images/${filename}`;
 };
 
-export const getContentBaseUrl = () => `${getProjectBaseUrl()}features/`;
-export const getMapsBaseUrl = () => `${getProjectBaseUrl()}maps/`;
+export const getContentBaseUrl = (baseUrl: string) => `${baseUrl}features/`;
+export const getMapsBaseUrl = (baseUrl: string) => `${baseUrl}maps/`;
 
 const stripFrontmatter = (md: string): string => md.replace(/^---\s*[\s\S]*?---\s*/, '');
 
@@ -44,12 +27,12 @@ const fetchMarkdown = async (baseUrl: string, id: string, folderName: string): P
   }
 };
 
-export const fetchFeatureMarkdown = async (featureId: string): Promise<string> => {
-  return fetchMarkdown(getContentBaseUrl(), featureId, 'features');
+export const fetchFeatureMarkdown = async (baseUrl: string, featureId: string): Promise<string> => {
+  return fetchMarkdown(getContentBaseUrl(baseUrl), featureId, 'features');
 };
 
-export const fetchMapMarkdown = async (mapId: string): Promise<string> => {
-  const content = await fetchMarkdown(getMapsBaseUrl(), mapId, 'maps');
+export const fetchMapMarkdown = async (baseUrl: string, mapId: string): Promise<string> => {
+  const content = await fetchMarkdown(getMapsBaseUrl(baseUrl), mapId, 'maps');
   if (!content) return "";
   return content.replace(/^##\s+.*(?:清單|列表|Features|POI)[\s\S]*$/mi, '').trim();
 };
@@ -63,6 +46,31 @@ export const generateKml = (features: any[]) => {
     }
   });
   return kml + `</Document></kml>`;
+};
+
+/**
+ * 產生專供 AI (如 NotebookLM) 使用的脈絡文本
+ */
+export const generateNotebookContext = (map: any, features: any[], mapMarkdown: string): string => {
+  let context = `WalkGIS Map Context Report\n`;
+  context += `==========================\n\n`;
+  context += `Map Name: ${map.name}\n`;
+  context += `Description: ${map.description || 'N/A'}\n`;
+  context += `Region: ${map.region || 'N/A'}\n`;
+  context += `Created At: ${map.created_at || 'N/A'}\n\n`;
+  
+  context += `Features List (${features.length} points):\n`;
+  context += `-------------------------------------\n`;
+  features.forEach((f, i) => {
+    context += `${i + 1}. ${f.name} (ID: ${f.feature_id})\n`;
+    context += `   Geometry: ${f.geometry_wkt}\n`;
+  });
+  
+  context += `\nDetailed Map Description:\n`;
+  context += `-------------------------\n`;
+  context += mapMarkdown || 'No detailed description available.';
+  
+  return context;
 };
 
 export const downloadFile = (content: string, filename: string, mimeType: string) => {

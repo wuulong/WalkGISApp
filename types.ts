@@ -1,6 +1,6 @@
 
 export interface WalkingMap {
-  map_id: string; // 從 number 改為 string
+  map_id: string;
   name: string;
   description: string;
   cover_image: string;
@@ -30,4 +30,14 @@ export interface FeatureMetadata {
 export interface SearchResult {
   feature_id: string;
   name: string;
+}
+
+export interface MarketSource {
+  id: string;
+  name: string;
+  url: string;
+  author: string;
+  description: string;
+  tags: string[];
+  cover_image: string;
 }
