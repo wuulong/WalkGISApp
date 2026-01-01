@@ -30,7 +30,6 @@ async function fetchWithDiagnostics(url: string, description: string, options?: 
     
     return response;
   } catch (error: any) {
-    // 只有在真的正在 Reload 時才標記為 Abort
     if (window.__WALKGIS_RELOADING__) {
       const abortErr = new Error('Page transition in progress');
       abortErr.name = 'AbortError';
@@ -65,6 +64,7 @@ async function fetchWasmWithFallback(log: (m: string) => void): Promise<Uint8Arr
 }
 
 const getSqlJsFactory = (module: any) => {
+  if (!module) return null;
   if (typeof module === 'function') return module;
   if (module.default && typeof module.default === 'function') return module.default;
   if (module.initSqlJs && typeof module.initSqlJs === 'function') return module.initSqlJs;
@@ -102,7 +102,6 @@ export const getDb = async (baseUrl: string): Promise<Database> => {
     log("Phase 3: Instantiating SQL Engine...");
     const SQL = await initSqlJs({ 
       wasmBinary,
-      // Provide locateFile as a backup if needed
       locateFile: (file: string) => WASM_CDNS[0]
     });
     log("Engine instantiated successfully.");
@@ -116,7 +115,7 @@ export const getDb = async (baseUrl: string): Promise<Database> => {
     
     if (dbBuffer.byteLength < 100) {
       log("Error: Database file is suspiciously small.");
-      throw new Error(`The file at ${dbUrl} is too small to be a valid SQLite database. Please check if the file exists and is not a 404 page.`);
+      throw new Error(`The file at ${dbUrl} is too small to be a valid SQLite database.`);
     }
     
     log("Phase 5: Mounting database into SQL.js memory...");

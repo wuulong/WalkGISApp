@@ -7,12 +7,11 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { queryFeaturesByMap, getDb } from '../services/dbService';
 import { WalkingMap } from '../types';
-import { FileDown, List, ChevronLeft, ChevronRight, RefreshCw, Sparkles, MapPin, BookOpen } from 'lucide-react';
+import { FileDown, List, ChevronLeft, ChevronRight, RefreshCw, Sparkles, MapPin, BookOpen, Share2, Check } from 'lucide-react';
 import { generateKml, downloadFile, resolveMapImagePath, fetchMapMarkdown, getContentBaseUrl, generateNotebookContext } from '../services/contentService';
 import { parseWkt } from '../services/geoUtils';
 import { useDataSource } from '../contexts/DataSourceContext';
 
-// 移除預設圖示，改用自定義編號標記
 const createNumberedIcon = (number: number) => {
   return L.divIcon({
     className: 'custom-div-icon',
@@ -29,9 +28,6 @@ const createNumberedIcon = (number: number) => {
   });
 };
 
-/**
- * 內部輔助組件：確保地圖載入後重新計算容器尺寸
- */
 const MapResizer = () => {
   const map = useMap();
   useEffect(() => {
@@ -43,14 +39,8 @@ const MapResizer = () => {
   return null;
 };
 
-/**
- * 預處理 Markdown 字串，防止 ~ 被誤認為刪除線格式
- * 將單個波浪號替換為 HTML 實體編碼
- */
 const preprocessMarkdown = (md: string) => {
   if (!md) return "";
-  // 匹配兩次波浪號 ~~ (刪除線) 以外的單個波浪號，或是在座標/範圍中常用的波浪號
-  // 將其替換為 HTML Entity 以避免解析器誤讀
   return md.replace(/([^\~])\~([^\~])/g, '$1&#126;$2');
 };
 
@@ -66,7 +56,7 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
   const [features, setFeatures] = useState<any[]>([]);
   const [mapMarkdown, setMapMarkdown] = useState<string>('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const loadData = async () => {
     setStatus('loading');
@@ -84,12 +74,17 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
       setMapMarkdown(md);
       setStatus('ready');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to load map data.');
       setStatus('error');
     }
   };
 
   useEffect(() => { loadData(); }, [mapId, baseUrl]);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleExportKML = () => {
     const kml = generateKml(features);
@@ -125,6 +120,10 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
         <img src={coverUrl} alt={mapInfo?.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
         <button onClick={onBack} className="absolute top-6 left-6 p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-white hover:text-slate-900 transition-all shadow-lg active:scale-95"><ChevronLeft className="w-6 h-6" /></button>
+        <button onClick={handleShare} className="absolute top-6 right-6 p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-white hover:text-blue-600 transition-all shadow-lg active:scale-95 flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+          {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+          {copied ? "Copied" : "Share"}
+        </button>
         <div className="absolute bottom-10 left-10 right-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-2">
             <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-none">{mapInfo?.name}</h2>
@@ -144,14 +143,7 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
       <div className="flex flex-col lg:flex-row gap-8 min-h-[500px]">
         <div className="flex-[3] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden flex flex-col group min-h-[400px]">
           <div className="h-[400px] lg:h-auto lg:flex-1 relative z-0">
-            <MapContainer 
-              key={`${mapId}-${baseUrl}`} 
-              center={center} 
-              zoom={15} 
-              scrollWheelZoom={true} 
-              className="z-0 h-full w-full" 
-              style={{ height: '100%', width: '100%' }}
-            >
+            <MapContainer key={`${mapId}-${baseUrl}`} center={center} zoom={15} scrollWheelZoom={true} className="z-0 h-full w-full">
               <MapResizer />
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {features.map((f, index) => {
@@ -159,12 +151,7 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
                 if (!pos) return null;
                 const markerNumber = index + 1;
                 return (
-                  <Marker 
-                    key={f.feature_id} 
-                    position={pos} 
-                    icon={createNumberedIcon(markerNumber)}
-                    eventHandlers={{ click: () => onSelectFeature(f) }}
-                  >
+                  <Marker key={f.feature_id} position={pos} icon={createNumberedIcon(markerNumber)} eventHandlers={{ click: () => onSelectFeature(f) }}>
                     <Popup className="custom-popup">
                       <div className="p-2 min-w-[200px]">
                         <div className="flex items-center gap-2 mb-2">
@@ -206,7 +193,6 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
 
       {mapMarkdown && (
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-          {/* Markdown Header Section */}
           <div className="px-8 sm:px-12 pt-12 pb-6 border-b border-slate-50 bg-slate-50/30">
              <div className="flex items-center gap-3 mb-2">
                 <BookOpen className="w-5 h-5 text-blue-600" />
@@ -214,19 +200,9 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
              </div>
              <h3 className="text-3xl font-black text-slate-900 tracking-tight">地圖導讀與背景說明</h3>
           </div>
-
           <div className="p-8 sm:p-12 lg:p-20">
-            <article className="prose prose-slate prose-lg max-w-4xl mx-auto prose-blue 
-              prose-headings:text-slate-900 prose-headings:font-black prose-headings:tracking-tight
-              prose-p:text-slate-600 prose-p:leading-relaxed prose-p:whitespace-pre-line
-              prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12
-              prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-              prose-blockquote:border-l-4 prose-blockquote:border-blue-200 prose-blockquote:bg-blue-50/50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl prose-blockquote:text-slate-700
-              prose-strong:text-slate-900 prose-strong:font-bold
-            ">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkBreaks]} 
-                components={{
+            <article className="prose prose-slate prose-lg max-w-4xl mx-auto prose-blue prose-headings:text-slate-900 prose-headings:font-black prose-headings:tracking-tight prose-p:text-slate-600 prose-p:leading-relaxed prose-p:whitespace-pre-line prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-blue-200 prose-blockquote:bg-blue-50/50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl prose-blockquote:text-slate-700 prose-strong:text-slate-900 prose-strong:font-bold">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={{
                   img: ({ src, alt, ...props }: any) => {
                     const finalSrc = src?.startsWith('http') ? src : `${markdownBase}${src}`;
                     return (
@@ -236,8 +212,7 @@ const MapDetail: React.FC<MapDetailProps> = ({ mapId, onBack, onSelectFeature })
                       </div>
                     );
                   }
-                }}
-              >
+                }}>
                 {preprocessMarkdown(mapMarkdown)}
               </ReactMarkdown>
             </article>

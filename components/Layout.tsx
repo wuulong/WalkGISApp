@@ -6,7 +6,7 @@ import { useDataSource } from '../contexts/DataSourceContext';
 import SourceSwitcher from './SourceSwitcher';
 
 // APP_VERSION 維護原則：重大 walkgis.db 架構更動（Breaking Changes）需更動大版本號（如 v2 -> v3）
-export const APP_VERSION = 'v2.0';
+export const APP_VERSION = 'v2.1';
 
 interface LayoutProps {
   children: React.ReactNode;

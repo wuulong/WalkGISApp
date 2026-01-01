@@ -16,7 +16,7 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
   const { baseUrl } = useDataSource();
   const [maps, setMaps] = useState<WalkingMap[]>([]);
   const [loading, setLoading] = useState(true);
-
+``
   useEffect(() => {
     queryMaps(baseUrl).then(data => {
       setMaps(data);
