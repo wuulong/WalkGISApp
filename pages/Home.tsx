@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { queryMaps } from '../services/dbService';
 import { WalkingMap } from '../types';
-import { Map as MapIcon, ChevronRight, Compass, Info, MapPinned, BookOpen, MessageSquare, ExternalLink, LifeBuoy } from 'lucide-react';
+import { Compass, MapPinned, BookOpen, MessageSquare, LifeBuoy, Github } from 'lucide-react';
 import { resolveMapImagePath } from '../services/contentService';
 import NearbyDiscovery from '../components/NearbyDiscovery';
 import { useDataSource } from '../contexts/DataSourceContext';
@@ -38,7 +38,7 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
   return (
     <div className="space-y-16 animate-in slide-in-from-bottom-4 duration-700">
       {/* Hero Section */}
-      <div className="text-center max-w-4xl mx-auto space-y-8">
+      <div className="text-center max-w-6xl mx-auto space-y-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100/50 mb-2">
           <MapPinned className="w-3 h-3" />
           Current Archive Node
@@ -50,33 +50,45 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
           Navigate through historical trails and community-mapped points of interest from the currently connected WalkGIS node.
         </p>
 
-        {/* Community Links */}
-        <div className="flex flex-wrap justify-center gap-4 mt-8">
-          <a href="https://wuulong.github.io/wuulong-notes-blog/posts/20251230_walkgis_app_architecture/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all group active:scale-95">
-            <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
+        {/* Community Links Grid - Optimized for 4 in a row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8">
+          <a href="https://wuulong.github.io/wuulong-notes-blog/series/walkgis/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all group active:scale-95">
+            <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors shrink-0">
               <LifeBuoy className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">User Guide</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">使用說明書</p>
+            <div className="text-left min-w-0">
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">User Guide</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">使用說明書</p>
             </div>
           </a>
-          <a href="https://bit.ly/491x0BV" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all group active:scale-95">
-            <div className="p-2 bg-amber-50 rounded-xl group-hover:bg-amber-100 transition-colors">
+          
+          <a href="https://bit.ly/491x0BV" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all group active:scale-95">
+            <div className="p-2 bg-amber-50 rounded-xl group-hover:bg-amber-100 transition-colors shrink-0">
               <BookOpen className="w-5 h-5 text-amber-600" />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Community Blog</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">哈爸筆記</p>
+            <div className="text-left min-w-0">
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Community Blog</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">哈爸筆記</p>
             </div>
           </a>
-          <a href="https://discord.gg/bywmcqCAEs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group active:scale-95">
-            <div className="p-2 bg-indigo-50 rounded-xl group-hover:bg-indigo-100 transition-colors">
+          
+          <a href="https://discord.gg/bywmcqCAEs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group active:scale-95">
+            <div className="p-2 bg-indigo-50 rounded-xl group-hover:bg-indigo-100 transition-colors shrink-0">
               <MessageSquare className="w-5 h-5 text-indigo-600" />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Join Discussion</p>
-              <p className="text-sm font-bold text-slate-900 flex items-center gap-1">哈爸實驗室 Discord</p>
+            <div className="text-left min-w-0">
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Join Discussion</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">哈爸實驗室 Discord</p>
+            </div>
+          </a>
+
+          <a href="https://github.com/wuulong/WalkGISApp" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-900 transition-all group active:scale-95">
+            <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+              <Github className="w-5 h-5 text-slate-600 group-hover:text-white" />
+            </div>
+            <div className="text-left min-w-0">
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Open Source</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">WalkGIS GitHub</p>
             </div>
           </a>
         </div>

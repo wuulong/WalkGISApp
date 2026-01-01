@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Globe, Link2, Check, AlertCircle, Loader2, Server, Award, PlusCircle, Terminal, RefreshCw } from 'lucide-react';
+import { X, Globe, Link2, Check, AlertCircle, Loader2, Server, Award, PlusCircle, Terminal, Info } from 'lucide-react';
 import { fetchMarketRegistry, validateDataSource } from '../services/marketService';
 import { MarketSource } from '../types';
 import { useDataSource } from '../contexts/DataSourceContext';
+import { APP_VERSION } from './Layout';
 
 interface SourceSwitcherProps {
   onClose: () => void;
@@ -45,7 +46,6 @@ const SourceSwitcher: React.FC<SourceSwitcherProps> = ({ onClose }) => {
       const isValid = await validateDataSource(target);
       
       if (isValid) {
-        // 交給 Context 處理重整與全域 Loading
         setBaseUrl(target);
       } else {
         setError({
@@ -61,7 +61,6 @@ const SourceSwitcher: React.FC<SourceSwitcherProps> = ({ onClose }) => {
     }
   };
 
-  // 如果全域正在切換，則由 App.tsx 的全域 Loading 處理，此組件會隨之關閉或隱藏
   if (globalIsSwitching) return null;
 
   return (
@@ -222,9 +221,12 @@ const SourceSwitcher: React.FC<SourceSwitcherProps> = ({ onClose }) => {
 
         {/* Footer */}
         <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-          <p className="text-[10px] text-slate-400 max-w-xs leading-relaxed">
-            Data is fetched directly from the node. No private data is ever sent to our servers.
-          </p>
+          <div className="flex items-center gap-2">
+            <Info className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              App Version: {APP_VERSION}
+            </span>
+          </div>
           <button onClick={onClose} className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-slate-600 hover:text-slate-900">
             Cancel
           </button>

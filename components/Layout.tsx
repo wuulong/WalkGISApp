@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Map as MapIcon, Home, Compass, Loader2, X, Database } from 'lucide-react';
+import { Search, Map as MapIcon, Home, Compass, Loader2, X, Database, Tag } from 'lucide-react';
 import { searchFeatures } from '../services/dbService';
 import { useDataSource } from '../contexts/DataSourceContext';
 import SourceSwitcher from './SourceSwitcher';
+
+// APP_VERSION 維護原則：重大 walkgis.db 架構更動（Breaking Changes）需更動大版本號（如 v2 -> v3）
+export const APP_VERSION = 'v2.0';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -52,9 +55,14 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) =
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <Compass className="w-8 h-8 text-blue-600" />
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                WalkGIS
-              </span>
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                  WalkGIS
+                </span>
+                <span className="text-[9px] font-black text-slate-400 tracking-widest mt-0.5">
+                  {APP_VERSION}
+                </span>
+              </div>
             </button>
 
             <div className="flex-1 max-w-md mx-4 relative">
@@ -134,7 +142,10 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearchSelect, onGoHome }) =
 
       <footer className="bg-white border-t border-slate-200 py-8 text-center text-slate-500 text-sm">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>&copy; {new Date().getFullYear()} WalkGIS Protocol. Powered by GitHub Pages & sql.js.</p>
+          <div className="flex items-center gap-2">
+            <p>&copy; {new Date().getFullYear()} WalkGIS Protocol {APP_VERSION}</p>
+            <span className="px-2 py-0.5 bg-slate-100 text-[10px] font-black rounded-md uppercase tracking-tighter">Production</span>
+          </div>
           <div className="flex gap-6">
             <a href="https://bit.ly/491x0BV" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">哈爸筆記 Blog</a>
             <a href="https://discord.gg/bywmcqCAEs" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">哈爸實驗室 Discord</a>

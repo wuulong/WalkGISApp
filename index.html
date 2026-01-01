@@ -39,6 +39,39 @@
         background: #cbd5e1;
       }
 
+      /* 自定義地圖編號標記樣式 */
+      .numbered-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+      }
+      .marker-pin {
+        width: 30px;
+        height: 30px;
+        background: #2563eb; /* blue-600 */
+        border: 2px solid white;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+      .marker-pin span {
+        transform: rotate(45deg);
+        color: white;
+        font-weight: 900;
+        font-size: 11px;
+        font-family: sans-serif;
+        margin-top: -2px;
+        margin-left: -2px;
+      }
+      .numbered-marker:hover .marker-pin {
+        background: #1e40af; /* blue-800 */
+        transform: rotate(-45deg) scale(1.1);
+      }
+
       .custom-popup .leaflet-popup-content-wrapper {
         border-radius: 1.5rem;
         padding: 0;
@@ -59,6 +92,7 @@
     "lucide-react": "https://esm.sh/lucide-react@0.460.0?deps=react@19.0.0",
     "react-markdown": "https://esm.sh/react-markdown@9.0.1?deps=react@19.0.0",
     "remark-gfm": "https://esm.sh/remark-gfm@4.0.0",
+    "remark-breaks": "https://esm.sh/remark-breaks@4.0.0",
     "leaflet": "https://esm.sh/leaflet@1.9.4",
     "react-leaflet": "https://esm.sh/react-leaflet@4.2.1?deps=react@19.0.0,react-dom@19.0.0,leaflet@1.9.4",
     "sql.js": "https://esm.sh/sql.js@1.12.0?bundle",

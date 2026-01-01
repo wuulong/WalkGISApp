@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Share2, FileDown, Loader2, Navigation, MapPin, Hash } from 'lucide-react';
+import { X, Share2, FileDown, Loader2, Navigation, MapPin, Hash, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { fetchFeatureMarkdown, getContentBaseUrl } from '../services/contentService';
 import { useDataSource } from '../contexts/DataSourceContext';
 
@@ -14,6 +15,14 @@ interface FeatureModalProps {
   } | null;
   onClose: () => void;
 }
+
+/**
+ * 預處理 Markdown 字串，防止 ~ 被誤認為刪除線格式
+ */
+const preprocessMarkdown = (md: string) => {
+  if (!md) return "";
+  return md.replace(/([^\~])\~([^\~])/g, '$1&#126;$2');
+};
 
 const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
   const { baseUrl } = useDataSource();
@@ -36,6 +45,7 @@ const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
   const coords = match ? { lat: match[2], lon: match[1] } : null;
   const googleMapsUrl = coords ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lon}` : null;
   const markdownBase = getContentBaseUrl(baseUrl);
+  const isError = content.startsWith('<!-- FETCH_ERROR -->');
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500">
@@ -48,15 +58,28 @@ const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
         <div className="flex-1 overflow-y-auto bg-white p-12 custom-scrollbar">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 gap-4"><Loader2 className="w-10 h-10 animate-spin text-blue-500" /><p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Fetching Content</p></div>
+          ) : isError ? (
+            <div className="p-8 bg-red-50 rounded-3xl border border-red-100 text-red-800">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertCircle className="w-6 h-6" />
+                <h3 className="font-bold">內容載入失敗</h3>
+              </div>
+              <div className="prose prose-red prose-sm max-w-none">
+                <ReactMarkdown>{content.replace('<!-- FETCH_ERROR -->', '')}</ReactMarkdown>
+              </div>
+            </div>
           ) : (
-            <article className="prose prose-slate prose-lg max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                img: ({ src, alt, ...props }: any) => {
-                  const finalSrc = src?.startsWith('http') ? src : `${markdownBase}${src}`;
-                  return <img src={finalSrc} alt={alt} className="rounded-3xl shadow-lg my-10" {...props} />
-                }
-              }}>
-                {content}
+            <article className="prose prose-slate prose-lg max-w-none prose-p:whitespace-pre-line">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm, remarkBreaks]} 
+                components={{
+                  img: ({ src, alt, ...props }: any) => {
+                    const finalSrc = src?.startsWith('http') ? src : `${markdownBase}${src}`;
+                    return <img src={finalSrc} alt={alt} className="rounded-3xl shadow-lg my-10" {...props} />
+                  }
+                }}
+              >
+                {preprocessMarkdown(content)}
               </ReactMarkdown>
             </article>
           )}
