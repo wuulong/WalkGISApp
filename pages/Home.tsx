@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { queryMaps } from '../services/dbService';
 import { WalkingMap } from '../types';
-import { Compass, MapPinned, BookOpen, MessageSquare, LifeBuoy, Github } from 'lucide-react';
+import { Compass, MapPinned, BookOpen, MessageSquare, LifeBuoy, Github, History } from 'lucide-react';
 import { resolveMapImagePath } from '../services/contentService';
 import NearbyDiscovery from '../components/NearbyDiscovery';
 import { useDataSource } from '../contexts/DataSourceContext';
@@ -16,7 +16,7 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
   const { baseUrl } = useDataSource();
   const [maps, setMaps] = useState<WalkingMap[]>([]);
   const [loading, setLoading] = useState(true);
-``
+
   useEffect(() => {
     queryMaps(baseUrl).then(data => {
       setMaps(data);
@@ -50,15 +50,15 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
           Navigate through historical trails and community-mapped points of interest from the currently connected WalkGIS node.
         </p>
 
-        {/* Community Links Grid - Optimized for 4 in a row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8">
+        {/* Community Links Grid - Optimized for 5 items */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mt-8">
           <a href="https://wuulong.github.io/wuulong-notes-blog/series/walkgis/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all group active:scale-95">
             <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors shrink-0">
               <LifeBuoy className="w-5 h-5 text-blue-600" />
             </div>
             <div className="text-left min-w-0">
               <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">User Guide</p>
-              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">使用說明書</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">使用說明</p>
             </div>
           </a>
           
@@ -67,7 +67,7 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
               <BookOpen className="w-5 h-5 text-amber-600" />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Community Blog</p>
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Blog</p>
               <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">哈爸筆記</p>
             </div>
           </a>
@@ -77,8 +77,18 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
               <MessageSquare className="w-5 h-5 text-indigo-600" />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Join Discussion</p>
-              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">哈爸實驗室 Discord</p>
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Discord</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">社群討論</p>
+            </div>
+          </a>
+
+          <a href="https://github.com/wuulong/WalkGISApp/blob/main/version.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 sm:px-5 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group active:scale-95">
+            <div className="p-2 bg-emerald-50 rounded-xl group-hover:bg-emerald-100 transition-colors shrink-0">
+              <History className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="text-left min-w-0">
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Changelog</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">版本紀錄</p>
             </div>
           </a>
 
@@ -87,8 +97,8 @@ const Home: React.FC<HomeProps> = ({ onSelectMap, onSelectFeature }) => {
               <Github className="w-5 h-5 text-slate-600 group-hover:text-white" />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">Open Source</p>
-              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">WalkGIS GitHub</p>
+              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">GitHub</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">專案原始碼</p>
             </div>
           </a>
         </div>
