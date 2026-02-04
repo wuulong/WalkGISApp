@@ -1,4 +1,7 @@
 
+import JSZip from 'jszip';
+import { parseWkt, parseLineWkt } from './geoUtils';
+
 export const resolveMapImagePath = (baseUrl: string, path: string | undefined): string | null => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
@@ -15,39 +18,23 @@ export const getMapsBaseUrl = (baseUrl: string) => `${baseUrl}maps/`;
 const stripFrontmatter = (md: string): string => md.replace(/^---\s*[\s\S]*?---\s*/, '');
 
 const fetchMarkdown = async (baseUrl: string, id: string, folderName: string): Promise<string> => {
-  // 1. 處理 ID，如果 ID 已經帶有 .md，則不重複添加
   const cleanId = id.toLowerCase().endsWith('.md') ? id.slice(0, -3) : id;
-  
-  // 2. 準備嘗試的路徑 (小寫與大寫)
   const urls = [
     `${baseUrl}${cleanId}.md`,
     `${baseUrl}${cleanId}.MD`
   ];
 
-  let lastError = "";
-
   for (const url of urls) {
     const encodedUrl = encodeURI(url);
     try {
-      console.log(`[ContentService] Attempting to fetch ${folderName}: ${encodedUrl}`);
       const response = await fetch(encodedUrl);
-      
       if (response.ok) {
         const rawText = await response.text();
-        console.log(`[ContentService] Successfully loaded from: ${encodedUrl}`);
         return stripFrontmatter(rawText);
-      } else {
-        lastError = `Status: ${response.status} ${response.statusText}`;
-        console.warn(`[ContentService] Failed on ${encodedUrl}: ${lastError}`);
       }
-    } catch (error: any) {
-      lastError = error.message;
-      console.error(`[ContentService] Network error on ${encodedUrl}:`, error);
-    }
+    } catch (error: any) {}
   }
-  
-  // 如果所有嘗試都失敗，回傳一個包含偵錯資訊的特殊字串 (用於 UI 顯示)
-  return `<!-- FETCH_ERROR --> 抱歉，找不到該說明的 Markdown 檔案。\n\n**嘗試路徑：**\n- ${urls[0]}\n- ${urls[1]}\n\n請確認檔案已上傳至 GitHub 且路徑正確。`;
+  return `<!-- FETCH_ERROR --> 無法載入詳細說明。`;
 };
 
 export const fetchFeatureMarkdown = async (baseUrl: string, featureId: string): Promise<string> => {
@@ -77,15 +64,108 @@ export const generateNotebookContext = (map: any, features: any[]) => {
   return context;
 };
 
-export const generateKml = (features: any[]) => {
-  let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>WalkGIS Export</name>`;
+const hexToKmlColor = (hex: string) => {
+  const cleanHex = hex.replace('#', '');
+  if (cleanHex.length !== 6) return 'ffeb6325';
+  const r = cleanHex.substring(0, 2);
+  const g = cleanHex.substring(2, 4);
+  const b = cleanHex.substring(4, 6);
+  return `ff${b}${g}${r}`;
+};
+
+export const generateKml = (features: any[], featureContents?: Record<string, string>) => {
+  let kml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  kml += `<kml xmlns="http://www.opengis.net/kml/2.2">\n`;
+  kml += `<Document>\n  <name>WalkGIS Export</name>\n`;
+
+  features.forEach((f) => {
+    let color = '#2563eb';
+    try {
+      if (f.meta_data) {
+        const meta = JSON.parse(f.meta_data);
+        color = meta.color || meta.stroke || color;
+      }
+    } catch(e) {}
+    
+    const kmlColor = hexToKmlColor(color);
+    
+    kml += `  <Style id="style_${f.feature_id}">\n`;
+    kml += `    <LineStyle><color>${kmlColor}</color><width>6</width></LineStyle>\n`;
+    kml += `    <PolyStyle><color>${kmlColor}66</color></PolyStyle>\n`;
+    kml += `    <IconStyle><color>${kmlColor}</color><scale>1.2</scale></IconStyle>\n`;
+    kml += `    <LabelStyle><color>ffffffff</color><scale>1.0</scale></LabelStyle>\n`;
+    kml += `  </Style>\n`;
+  });
+
   features.forEach(f => {
-    const match = f.geometry_wkt.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
-    if (match) {
-      kml += `<Placemark><name>${f.name}</name><Point><coordinates>${match[1]},${match[2]},0</coordinates></Point></Placemark>`;
+    const wkt = f.geometry_wkt as string;
+    const styleUrl = `#style_${f.feature_id}`;
+    const rawMd = featureContents ? featureContents[f.feature_id] : (f.description || '');
+    const cleanMd = rawMd.startsWith('<!-- FETCH_ERROR -->') ? (f.description || '無詳細內容') : rawMd;
+    const htmlDescription = `<b>${f.name}</b><br/><br/>${cleanMd.replace(/\n/g, '<br/>')}`;
+    const description = `<![CDATA[${htmlDescription}]]>`;
+
+    const pt = parseWkt(wkt);
+    if (pt) {
+      kml += `  <Placemark>\n    <name>${f.name}</name>\n    <description>${description}</description>\n    <styleUrl>${styleUrl}</styleUrl>\n    <Point><coordinates>${pt.lng},${pt.lat},0</coordinates></Point>\n  </Placemark>\n`;
+    } else {
+      const ln = parseLineWkt(wkt);
+      if (ln) {
+        const coordsStr = ln.map(coord => `${coord[1]},${coord[0]},0`).join(' ');
+        kml += `  <Placemark>\n    <name>${f.name}</name>\n    <description>${description}</description>\n    <styleUrl>${styleUrl}</styleUrl>\n    <LineString><tessellate>1</tessellate><coordinates>${coordsStr}</coordinates></LineString>\n  </Placemark>\n`;
+      }
     }
   });
-  return kml + `</Document></kml>`;
+
+  kml += `</Document>\n</kml>`;
+  return kml;
+};
+
+const generateAtakManifest = (uid: string, name: string, files: string[]) => {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<missionpackageversion>\n`;
+  xml += `  <param name="uid" value="${uid}"/>\n`;
+  xml += `  <param name="name" value="${name}"/>\n`;
+  xml += `  <param name="onReceiveDelete" value="false"/>\n`;
+  xml += `  <Contents>\n`;
+  files.forEach(file => {
+    xml += `    <Content ignore="false" zipEntry="${file}">\n`;
+    xml += `      <Parameter name="uid" value="${uid}.${file}"/>\n`;
+    xml += `    </Content>\n`;
+  });
+  xml += `  </Contents>\n</missionpackageversion>`;
+  return xml;
+};
+
+export const exportAtakDataPackage = async (baseUrl: string, map: any, features: any[]) => {
+  const zip = new JSZip();
+  const mapName = map.name || 'WalkGIS_Map';
+  const uid = map.map_id || `walkgis.${Date.now()}`;
+  
+  const featureContents: Record<string, string> = {};
+  for (const feature of features) {
+    try {
+      const md = await fetchFeatureMarkdown(baseUrl, feature.feature_id);
+      featureContents[feature.feature_id] = md;
+    } catch (e) {
+      featureContents[feature.feature_id] = feature.description || '無詳細內容';
+    }
+  }
+
+  const kmlContent = generateKml(features, featureContents);
+  zip.file("map.kml", kmlContent);
+  
+  const manifest = generateAtakManifest(uid, mapName, ["map.kml"]);
+  zip.file("manifest.xml", manifest);
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${mapName}_ATAK.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
 export const downloadFile = (content: string, filename: string, mimeType: string) => {

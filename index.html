@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -48,14 +49,14 @@
       .marker-pin {
         width: 30px;
         height: 30px;
-        background: #2563eb; /* blue-600 */
+        background: #2563eb;
         border: 2px solid white;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       .marker-pin span {
         transform: rotate(45deg);
@@ -66,9 +67,30 @@
         margin-top: -2px;
         margin-left: -2px;
       }
-      .numbered-marker:hover .marker-pin {
-        background: #1e40af; /* blue-800 */
-        transform: rotate(-45deg) scale(1.1);
+
+      /* 選中狀態的強調動畫 */
+      .marker-active .marker-pin {
+        background: #f59e0b !important; /* Amber 500 */
+        transform: rotate(-45deg) scale(1.4);
+        border-color: #fff;
+        z-index: 1000;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+      }
+
+      .marker-active::after {
+        content: '';
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background: rgba(245, 158, 11, 0.4);
+        border-radius: 50%;
+        animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        z-index: -1;
+      }
+
+      @keyframes pulse-ring {
+        0% { transform: scale(.33); }
+        80%, 100% { opacity: 0; }
       }
 
       .custom-popup .leaflet-popup-content-wrapper {
@@ -96,6 +118,7 @@
     "leaflet": "https://esm.sh/leaflet@1.9.4",
     "react-leaflet": "https://esm.sh/react-leaflet@4.2.1?deps=react@19.0.0,react-dom@19.0.0,leaflet@1.9.4",
     "sql.js": "https://esm.sh/sql.js@1.12.0?bundle",
+    "jszip": "https://esm.sh/jszip@3.10.1",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
   }

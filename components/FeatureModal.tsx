@@ -73,11 +73,39 @@ const FeatureModal: React.FC<FeatureModalProps> = ({ feature, onClose }) => {
               <div className="prose prose-red prose-sm max-w-none"><ReactMarkdown>{content.replace('<!-- FETCH_ERROR -->', '')}</ReactMarkdown></div>
             </div>
           ) : (
-            <article className="prose prose-slate prose-lg max-w-none prose-p:whitespace-pre-line">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={{
+            <article className="prose prose-slate prose-lg max-w-none prose-p:whitespace-pre-line prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-10">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm, remarkBreaks]} 
+                components={{
+                  a: ({ href, children }) => {
+                    const isInternal = href?.startsWith('?');
+                    if (isInternal) {
+                      return (
+                        <span 
+                          role="link"
+                          tabIndex={0}
+                          className="cursor-pointer text-blue-600 hover:underline font-bold"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.dispatchEvent(new CustomEvent('internal-navigation', { detail: { href } }));
+                            try { if (window.location.protocol !== 'blob:') { window.history.pushState({}, '', href); } } catch (err) { console.warn("History pushState suppressed."); }
+                          }}
+                        >
+                          {children}
+                        </span>
+                      );
+                    }
+                    return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
+                  },
                   img: ({ src, alt, ...props }: any) => {
                     const finalSrc = src?.startsWith('http') ? src : `${markdownBase}${src}`;
-                    return <img src={finalSrc} alt={alt} className="rounded-3xl shadow-lg my-10" {...props} />
+                    return (
+                      <div className="my-10 space-y-3">
+                        <img src={finalSrc} alt={alt} className="rounded-3xl shadow-2xl mx-auto" {...props} />
+                        {alt && <p className="text-center text-sm font-bold text-slate-400 italic">↑ {alt}</p>}
+                      </div>
+                    );
                   }
                 }}>
                 {preprocessMarkdown(content)}
